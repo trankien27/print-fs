@@ -6,13 +6,13 @@ function Show-LoginForm {
     $correctPassword = "admin123"
 
     $form = New-Object System.Windows.Forms.Form
-    $form.Text = "Đăng nhập"
+    $form.Text = "Login"
     $form.Size = New-Object System.Drawing.Size(300, 160)
     $form.StartPosition = "CenterScreen"
     $form.TopMost = $true
 
     $label = New-Object System.Windows.Forms.Label
-    $label.Text = "Nhập mật khẩu:"
+    $label.Text = "Password:"
     $label.Location = New-Object System.Drawing.Point(20, 20)
     $label.Size = New-Object System.Drawing.Size(250, 20)
     $form.Controls.Add($label)
@@ -30,7 +30,7 @@ function Show-LoginForm {
     $form.Controls.Add($okButton)
 
     $cancelButton = New-Object System.Windows.Forms.Button
-    $cancelButton.Text = "Thoát"
+    $cancelButton.Text = "Exit"
     $cancelButton.Location = New-Object System.Drawing.Point(150, 90)
     $cancelButton.Size = New-Object System.Drawing.Size(80, 30)
     $form.Controls.Add($cancelButton)
@@ -60,7 +60,7 @@ function Show-LoginForm {
 $defaultFont = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Regular)
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "In ảnh theo transactionId"
+$form.Text = "Print"
 $form.Size = New-Object System.Drawing.Size(650, 400)
 $form.StartPosition = "CenterScreen"
 $form.Font = $defaultFont
