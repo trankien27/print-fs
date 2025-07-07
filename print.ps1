@@ -157,7 +157,7 @@ $txtNumPrint.Text = "1"
 $form.Controls.Add($txtNumPrint)
 
 $btnPrintNow = New-Object System.Windows.Forms.Button
-$btnPrintNow.Text = "In ảnh"
+$btnPrintNow.Text = "Print"
 $btnPrintNow.Location = New-Object System.Drawing.Point(430, 480)
 $btnPrintNow.Size = New-Object System.Drawing.Size(120, 40)
 $form.Controls.Add($btnPrintNow)
