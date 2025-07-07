@@ -1,5 +1,9 @@
 ﻿Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
+if (![System.Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
+    Start-Process powershell.exe "-STA -WindowStyle Normal -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    exit
+}
 
 function Show-LoginForm {
     $loginSuccess = $false
