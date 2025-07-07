@@ -2,11 +2,16 @@
 Add-Type -AssemblyName System.Drawing
 
 # Load SQLite DLL manually from local file
-$sqliteDllPath = "D:\Work\PhotoBooth\Data\System.Data.SQLite.dll"
-
+# Load SQLite DLL from GitHub if not already in TEMP
+$sqliteDllPath = "$env:TEMP\\System.Data.SQLite.dll"
 if (-not (Test-Path $sqliteDllPath)) {
-    [System.Windows.Forms.MessageBox]::Show("❌ Local SQLite DLL not found at: $sqliteDllPath", "Missing DLL")
-    exit
+    try {
+        Invoke-WebRequest -Uri "https://github.com/trankien27/print-fs/raw/refs/heads/main/System.Data.SQLite.dll" `
+            -OutFile $sqliteDllPath -UseBasicParsing
+    } catch {
+        [System.Windows.Forms.MessageBox]::Show("❌ Cannot download SQLite DLL. Check internet connection or update URL.", "DLL Load Error")
+        exit
+    }
 }
 Add-Type -Path $sqliteDllPath
 
