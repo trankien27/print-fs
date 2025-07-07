@@ -110,7 +110,7 @@ $lblNumber.Size = New-Object System.Drawing.Size(120, 25)
 $form.Controls.Add($lblNumber)
 
 $numImage = New-Object System.Windows.Forms.NumericUpDown
-$numImage.Location = New-Object System.Drawing.Point(360, 283)
+$numImage.Location = New-Object System.Drawing.Point(380, 283)
 $numImage.Size = New-Object System.Drawing.Size(60, 25)
 $numImage.Minimum = 1
 $numImage.Maximum = 10
