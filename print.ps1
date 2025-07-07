@@ -3,7 +3,7 @@ Add-Type -AssemblyName System.Drawing
 
 # Load SQLite DLL manually from local file
 # Load SQLite DLL from GitHub if not already in TEMP
-$sqliteDllPath = "$env:TEMP\\System.Data.SQLite.dll"
+$sqliteDllPath = "D:\\Work\\PhotoBooth\\Data\\System.Data.SQLite.dll"
 if (-not (Test-Path $sqliteDllPath)) {
     try {
         Invoke-WebRequest -Uri "https://github.com/trankien27/print-fs/raw/refs/heads/main/System.Data.SQLite.dll" `
