@@ -1,19 +1,20 @@
+﻿
+
+function Show-LoginForm {
 
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
-
-function Show-LoginForm {
     $loginSuccess = $false
     $correctPassword = "admin123"
 
     $form = New-Object System.Windows.Forms.Form
-    $form.Text = "Đăng nhập"
+    $form.Text = "ÄÄƒng nháº­p"
     $form.Size = New-Object System.Drawing.Size(300, 160)
     $form.StartPosition = "CenterScreen"
     $form.TopMost = $true
 
     $label = New-Object System.Windows.Forms.Label
-    $label.Text = "Nhập mật khẩu:"
+    $label.Text = "Nhập mật khẩ:"
     $label.Location = New-Object System.Drawing.Point(20, 20)
     $label.Size = New-Object System.Drawing.Size(250, 20)
     $form.Controls.Add($label)
@@ -31,7 +32,7 @@ function Show-LoginForm {
     $form.Controls.Add($okButton)
 
     $cancelButton = New-Object System.Windows.Forms.Button
-    $cancelButton.Text = "Thoát"
+    $cancelButton.Text = "ThoÃ¡t"
     $cancelButton.Location = New-Object System.Drawing.Point(150, 90)
     $cancelButton.Size = New-Object System.Drawing.Size(80, 30)
     $form.Controls.Add($cancelButton)
@@ -41,7 +42,7 @@ function Show-LoginForm {
             $form.Tag = $true
             $form.Close()
         } else {
-            [System.Windows.Forms.MessageBox]::Show("Sai mật khẩu!", "Lỗi")
+            [System.Windows.Forms.MessageBox]::Show("Sai mật khẩ!", "Lỗi")
             $textbox.Clear()
         }
     })
@@ -61,7 +62,7 @@ function Show-LoginForm {
 $defaultFont = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Regular)
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "In ảnh theo transactionId"
+$form.Text = "In áº£nh theo transactionId"
 $form.Size = New-Object System.Drawing.Size(650, 400)
 $form.StartPosition = "CenterScreen"
 $form.Font = $defaultFont
@@ -168,10 +169,10 @@ function Send-ToPrintAPI {
         $json = $body | ConvertTo-Json -Depth 5
         $response = Invoke-RestMethod -Uri $apiUrl -Method POST -Body $json -ContentType "application/json"
 
-        [System.Windows.Forms.MessageBox]::Show("✅ Print successfully!", "Success")
+        [System.Windows.Forms.MessageBox]::Show("Print successfully!", "Success")
     }
     catch {
-        [System.Windows.Forms.MessageBox]::Show("❌ Send error: $_", "Error")
+        [System.Windows.Forms.MessageBox]::Show("Send error: $_", "Error")
     }
 }
 
@@ -194,5 +195,5 @@ if (Show-LoginForm) {
     $form.Topmost = $true
     [void]$form.ShowDialog()
 } else {
-    [System.Windows.Forms.MessageBox]::Show("Bạn đã thoát hoặc nhập sai mật khẩu!", "Thoát")
+    [System.Windows.Forms.MessageBox]::Show("Wrong password!", "Thoát")
 }
