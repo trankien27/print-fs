@@ -3,7 +3,7 @@ Add-Type -AssemblyName System.Drawing
 
 function Show-LoginForm {
     $loginSuccess = $false
-    $correctPassword = "admin123"
+    $correctPassword = "funstud!o"
 
     $form = New-Object System.Windows.Forms.Form
     $form.Text = "Login"
