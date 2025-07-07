@@ -1,4 +1,4 @@
-Add-Type -AssemblyName System.Windows.Forms
+﻿Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 $defaultFont = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Regular)
@@ -12,7 +12,7 @@ $form.Font = $defaultFont
 
 # Nút Tải thư mục
 $btnLoad = New-Object System.Windows.Forms.Button
-$btnLoad.Text = "Tải danh sách giao dịch"
+$btnLoad.Text = "Load list transacitons id"
 $btnLoad.Location = New-Object System.Drawing.Point(30, 20)
 $btnLoad.Size = New-Object System.Drawing.Size(200, 30)
 $form.Controls.Add($btnLoad)
@@ -31,7 +31,7 @@ $form.Controls.Add($listView)
 
 # Label hiển thị transactionId đã chọn
 $lblSelected = New-Object System.Windows.Forms.Label
-$lblSelected.Text = "transactionId: (chưa chọn)"
+$lblSelected.Text = "transactionId: ()"
 $lblSelected.Location = New-Object System.Drawing.Point(30, 250)
 $lblSelected.Size = New-Object System.Drawing.Size(600, 25)
 $form.Controls.Add($lblSelected)
@@ -50,7 +50,7 @@ $form.Controls.Add($txtLayout)
 
 # Label và NumericUpDown Số ảnh
 $lblNumber = New-Object System.Windows.Forms.Label
-$lblNumber.Text = "Số ảnh:"
+$lblNumber.Text = "Number of image:"
 $lblNumber.Location = New-Object System.Drawing.Point(250, 285)
 $lblNumber.Size = New-Object System.Drawing.Size(60, 25)
 $form.Controls.Add($lblNumber)
@@ -65,7 +65,7 @@ $form.Controls.Add($numImage)
 
 # Nút gửi API
 $btnSend = New-Object System.Windows.Forms.Button
-$btnSend.Text = "Gửi lệnh in"
+$btnSend.Text = "Send print command"
 $btnSend.Location = New-Object System.Drawing.Point(420, 280)
 $btnSend.Size = New-Object System.Drawing.Size(120, 30)
 $form.Controls.Add($btnSend)
@@ -80,7 +80,7 @@ $btnLoad.Add_Click({
 
     $root = "D:\Work\PhotoBooth\Image"
     if (-not (Test-Path $root)) {
-        [System.Windows.Forms.MessageBox]::Show("Thư mục không tồn tại: $root", "Lỗi")
+        [System.Windows.Forms.MessageBox]::Show("Folder is not exist: $root", "Error")
         return
     }
 
@@ -92,7 +92,7 @@ $btnLoad.Add_Click({
         $listView.Items.Add($item)
     }
 
-    [System.Windows.Forms.MessageBox]::Show("Đã tải danh sách giao dịch!", "Thông báo")
+    [System.Windows.Forms.MessageBox]::Show("Load transaction id successfully!", "Noftification")
 })
 
 # Khi chọn 1 dòng trong ListView
@@ -122,21 +122,21 @@ function Send-ToPrintAPI {
         $json = $body | ConvertTo-Json -Depth 5
         $response = Invoke-RestMethod -Uri $apiUrl -Method POST -Body $json -ContentType "application/json"
 
-        [System.Windows.Forms.MessageBox]::Show("✅ Gửi thành công!", "Thành công")
+        [System.Windows.Forms.MessageBox]::Show("✅ Print successfully!", "Success")
     }
     catch {
-        [System.Windows.Forms.MessageBox]::Show("❌ Gửi lỗi: $_", "Lỗi")
+        [System.Windows.Forms.MessageBox]::Show("❌ Send error: $_", "Error")
     }
 }
 
 # Gửi lệnh in
 $btnSend.Add_Click({
     if (-not $global:transactionId) {
-        [System.Windows.Forms.MessageBox]::Show("Bạn chưa chọn transactionId!", "Thiếu thông tin")
+        [System.Windows.Forms.MessageBox]::Show("You have not selected transactionId !", "Missing information")
         return
     }
     if (-not $txtLayout.Text) {
-        [System.Windows.Forms.MessageBox]::Show("Bạn chưa nhập LayoutId!", "Thiếu thông tin")
+        [System.Windows.Forms.MessageBox]::Show("You have not type layoutID ", "Missing information")
         return
     }
 
