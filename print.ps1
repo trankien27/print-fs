@@ -1,22 +1,32 @@
 ﻿Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
-Add-Type -AssemblyName System.Data.SQLite
-# SQLite Connection
-$global:DbPath = "D:\Work\PhotoBooth\Data\Funstudio.db"
-$global:SQLiteConnection = New-Object System.Data.SQLite.SQLiteConnection
-$global:SQLiteConnection.ConnectionString = "Data Source=$global:DbPath;Version=3;"
 
-function Open-SQLiteConnection {
-    try {
-        # SQLite Connection
+# Load SQLite DLL manually from local file
+$sqliteDllPath = "D:\Work\PhotoBooth\Data\System.Data.SQLite.dll"
+
+if (-not (Test-Path $sqliteDllPath)) {
+    [System.Windows.Forms.MessageBox]::Show("❌ Local SQLite DLL not found at: $sqliteDllPath", "Missing DLL")
+    exit
+}
+Add-Type -Path $sqliteDllPath
+
+if (![System.Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
+    Start-Process powershell.exe "-STA -WindowStyle Normal -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    exit
+}
+
+# SQLite Connection
 $global:DbPath = "D:\Work\PhotoBooth\Data\Funstudio.db"
 $connectionString = "Data Source=$global:DbPath;Version=3;"
 $global:SQLiteConnection = New-Object -TypeName System.Data.SQLite.SQLiteConnection -ArgumentList $connectionString
 
+function Open-SQLiteConnection {
+    try {
+        $global:SQLiteConnection.Open()
     } catch {
-     $msg = "Cannot connect to database: $global:DbPath`nError: $($_.Exception.Message)"
+        $msg = "Cannot connect to database: $global:DbPath`nError: $($_.Exception.Message)"
         [System.Windows.Forms.MessageBox]::Show($msg, "Database Error")
-        [System.Windows.Forms.MessageBox]::Show("Cannot connect to database: $global:DbPath", "Database Error")
+        throw
     }
 }
 
@@ -83,8 +93,30 @@ function Show-LoginForm {
     return $form.Tag -eq $true
 }
 
-# GUI hiển thị Transactions từ database
+# Hàm gọi API
+function Send-ToPrintAPI {
+    param (
+        [string]$transactionId,
+        [string]$layoutId,
+        [int]$numberOfImage = 1,
+        [string]$apiUrl = "http://localhost:8088/api/print/printimage"
+    )
 
+    try {
+        $body = @{
+            transactionId = $transactionId
+            layoutId = $layoutId
+            numberOfImage = $numberOfImage
+        }
+        $json = $body | ConvertTo-Json -Depth 3
+        $response = Invoke-RestMethod -Uri $apiUrl -Method POST -Body $json -ContentType "application/json"
+        [System.Windows.Forms.MessageBox]::Show("✅ Print successfully!", "Success")
+    } catch {
+        [System.Windows.Forms.MessageBox]::Show("❌ Send error: $_", "Error")
+    }
+}
+
+# Form chính
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Transactions Viewer"
 $form.Size = New-Object System.Drawing.Size(900, 600)
@@ -113,7 +145,47 @@ $txtLayoutId.Location = New-Object System.Drawing.Point(20, 480)
 $txtLayoutId.Size = New-Object System.Drawing.Size(300, 30)
 $form.Controls.Add($txtLayoutId)
 
-# Load data from DB
+$txtNumPrint = New-Object System.Windows.Forms.TextBox
+$txtNumPrint.Location = New-Object System.Drawing.Point(340, 480)
+$txtNumPrint.Size = New-Object System.Drawing.Size(80, 30)
+$txtNumPrint.Text = "1"
+$form.Controls.Add($txtNumPrint)
+
+$btnPrintNow = New-Object System.Windows.Forms.Button
+$btnPrintNow.Text = "In ảnh"
+$btnPrintNow.Location = New-Object System.Drawing.Point(430, 480)
+$btnPrintNow.Size = New-Object System.Drawing.Size(120, 40)
+$form.Controls.Add($btnPrintNow)
+
+$btnPrintNow.Add_Click({
+    if ($listView.SelectedItems.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show("Please select a transaction!", "Missing data")
+        return
+    }
+    if (-not $txtLayoutId.Text) {
+        [System.Windows.Forms.MessageBox]::Show("Please enter layoutId", "Missing data")
+        return
+    }
+    $num = 1
+    if ([int]::TryParse($txtNumPrint.Text, [ref]$num) -eq $false -or $num -le 0) {
+        [System.Windows.Forms.MessageBox]::Show("Invalid number of prints", "Error")
+        return
+    }
+
+    $selected = $listView.SelectedItems[0]
+    $transactionId = $selected.Text
+    Send-ToPrintAPI -transactionId $transactionId -layoutId $txtLayoutId.Text -numberOfImage $num
+})
+
+$listView.Add_SelectedIndexChanged({
+    if ($listView.SelectedItems.Count -gt 0) {
+        $selected = $listView.SelectedItems[0]
+        $lblSelected.Text = "Selected TransactionId: " + $selected.Text
+        $txtLayoutId.Text = $selected.SubItems[2].Text
+    }
+})
+
+# Load danh sách giao dịch từ DB
 function Load-Transactions {
     $listView.Items.Clear()
     $query = "SELECT Id, RecordAt, LayoutId FROM Transactions ORDER BY RecordAt DESC LIMIT 200"
@@ -121,7 +193,7 @@ function Load-Transactions {
     $cmd.CommandText = $query
     $reader = $cmd.ExecuteReader()
     while ($reader.Read()) {
-        $id = $reader["TransactionId"]
+        $id = $reader["Id"]
         $date = ([datetime]$reader["RecordAt"]).ToString("yyyy-MM-dd HH:mm")
         $layout = $reader["LayoutId"]
         $item = New-Object System.Windows.Forms.ListViewItem($id)
@@ -132,14 +204,7 @@ function Load-Transactions {
     $reader.Close()
 }
 
-$listView.Add_SelectedIndexChanged({
-    if ($listView.SelectedItems.Count -gt 0) {
-        $selected = $listView.SelectedItems[0]
-        $lblSelected.Text = "Selected TransactionId: " + $selected.Text
-        $txtLayoutId.Text = $selected.SubItems[2].Text
-    }
-})
-
+# Chạy chương trình
 if (Show-LoginForm) {
     Open-SQLiteConnection
     Load-Transactions
