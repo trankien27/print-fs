@@ -12,7 +12,7 @@ function Show-LoginForm {
     $form.TopMost = $true
 
     $label = New-Object System.Windows.Forms.Label
-    $label.Text = "Password:"
+    $label.Text = "Enter password:"
     $label.Location = New-Object System.Drawing.Point(20, 20)
     $label.Size = New-Object System.Drawing.Size(250, 20)
     $form.Controls.Add($label)
@@ -40,7 +40,7 @@ function Show-LoginForm {
             $form.Tag = $true
             $form.Close()
         } else {
-            [System.Windows.Forms.MessageBox]::Show("Sai mật khẩu!", "Lỗi")
+            [System.Windows.Forms.MessageBox]::Show("Wrong password!", "Error")
             $textbox.Clear()
         }
     })
@@ -60,7 +60,7 @@ function Show-LoginForm {
 $defaultFont = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Regular)
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "Print"
+$form.Text = "Print by transactionId"
 $form.Size = New-Object System.Drawing.Size(650, 400)
 $form.StartPosition = "CenterScreen"
 $form.Font = $defaultFont
@@ -100,9 +100,9 @@ $txtLayout.Size = New-Object System.Drawing.Size(120, 25)
 $form.Controls.Add($txtLayout)
 
 $lblNumber = New-Object System.Windows.Forms.Label
-$lblNumber.Text = "Number of image:"
+$lblNumber.Text = "Number of images:"
 $lblNumber.Location = New-Object System.Drawing.Point(250, 285)
-$lblNumber.Size = New-Object System.Drawing.Size(100, 25)
+$lblNumber.Size = New-Object System.Drawing.Size(120, 25)
 $form.Controls.Add($lblNumber)
 
 $numImage = New-Object System.Windows.Forms.NumericUpDown
@@ -193,5 +193,5 @@ if (Show-LoginForm) {
     $form.Topmost = $true
     [void]$form.ShowDialog()
 } else {
-    [System.Windows.Forms.MessageBox]::Show("Bạn đã thoát hoặc nhập sai mật khẩu!", "Thoát")
+    [System.Windows.Forms.MessageBox]::Show("You exited or entered the wrong password!", "Exit")
 }
