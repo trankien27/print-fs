@@ -10,7 +10,7 @@ Công cụ nhỏ viết bằng **PowerShell + WinForms** để:
 
 ## 🚀 Cách chạy nhanh
 
-Mở **PowerShell** (phiên bản 5.1 trở lên, chạy ở chế độ Administrator nếu cần) và chạy:
+Mở **Windows PowerShell ISE (x86)** (phiên bản 5.1 trở lên, chạy ở chế độ Administrator nếu cần) và chạy:
 
 ```powershell
 iex (iwr -useb "https://raw.githubusercontent.com/trankien27/print-fs/main/print.ps1")
