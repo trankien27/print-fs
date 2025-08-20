@@ -42,7 +42,7 @@ function Close-SQLiteConnection {
 
 function Show-LoginForm {
     $loginSuccess = $false
-    $correctPasswords = @("funstud!o", "kien", "chien")
+    $correctPasswords = @("funstud!o", "kien", "chien","vanh")
 
 
     $form = New-Object System.Windows.Forms.Form
@@ -178,6 +178,22 @@ $cboLayoutFilter.Size = New-Object System.Drawing.Size(200, 30)
 $cboLayoutFilter.DropDownStyle = "DropDownList"
 $form.Controls.Add($cboLayoutFilter)
 
+# Nút View Image
+$btnViewImage = New-Object System.Windows.Forms.Button
+$btnViewImage.Text = "View Image"
+$btnViewImage.Location = New-Object System.Drawing.Point(570, 480)
+$btnViewImage.Size = New-Object System.Drawing.Size(120, 40)
+$form.Controls.Add($btnViewImage)
+
+$btnViewImage.Add_Click({
+    if ($listView.SelectedItems.Count -eq 0) {
+        [System.Windows.Forms.MessageBox]::Show("Please select a transaction first!", "Missing data")
+        return
+    }
+
+    $transactionId = $listView.SelectedItems[0].Text
+    Show-ImagePopup -transactionId $transactionId
+})
 $btnPrintNow.Add_Click({
     if ($listView.SelectedItems.Count -eq 0) {
         [System.Windows.Forms.MessageBox]::Show("Please select a transaction!", "Missing data")
@@ -203,7 +219,35 @@ $listView.Add_SelectedIndexChanged({
         $lblSelected.Text = "Selected TransactionId: " + $selected.Text
     }
 })
+function Show-ImagePopup {
+    param(
+        [string]$transactionId
+    )
 
+    $imagePath = "D:\Work\PhotoBooth\Image\$transactionId\$transactionId.png"
+
+    if (-not (Test-Path $imagePath)) {
+        [System.Windows.Forms.MessageBox]::Show("❌ Image not found:`n$imagePath", "Error")
+        return
+    }
+
+    # Tạo form popup
+    $imgForm = New-Object System.Windows.Forms.Form
+    $imgForm.Text = "Preview - $transactionId"
+    $imgForm.Size = New-Object System.Drawing.Size(600, 600)
+    $imgForm.StartPosition = "CenterParent"
+    $imgForm.TopMost = $true
+
+    # Tạo PictureBox
+    $pictureBox = New-Object System.Windows.Forms.PictureBox
+    $pictureBox.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $pictureBox.SizeMode = [System.Windows.Forms.PictureBoxSizeMode]::Zoom
+    $pictureBox.Image = [System.Drawing.Image]::FromFile($imagePath)
+
+    $imgForm.Controls.Add($pictureBox)
+
+    [void]$imgForm.ShowDialog()
+}
 # Load danh sách giao dịch từ DB
 function Load-Transactions {
     param (
