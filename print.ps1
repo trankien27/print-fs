@@ -2,7 +2,6 @@
 Add-Type -AssemblyName System.Drawing
 
 # Load SQLite DLL manually from local file
-# Load SQLite DLL from GitHub if not already in TEMP
 $sqliteDllPath = "D:\\Work\\PhotoBooth\\Data\\System.Data.SQLite.dll"
 if (-not (Test-Path $sqliteDllPath)) {
     try {
@@ -43,7 +42,8 @@ function Close-SQLiteConnection {
 
 function Show-LoginForm {
     $loginSuccess = $false
-    $correctPassword = "funstud!o"
+    $correctPasswords = @("funstud!o", "kien", "chien")
+
 
     $form = New-Object System.Windows.Forms.Form
     $form.Text = "Login"
@@ -77,7 +77,7 @@ function Show-LoginForm {
     $form.Controls.Add($cancelButton)
 
     $okButton.Add_Click({
-        if ($textbox.Text -eq $correctPassword) {
+        if ($correctPasswords -contains $textbox.Text) {
             $form.Tag = $true
             $form.Close()
         } else {
@@ -124,7 +124,7 @@ function Send-ToPrintAPI {
 # Form chính
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Transactions Viewer"
-$form.Size = New-Object System.Drawing.Size(900, 600)
+$form.Size = New-Object System.Drawing.Size(900, 650)
 $form.StartPosition = "CenterScreen"
 $form.Font = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Regular)
 
@@ -145,10 +145,7 @@ $lblSelected.Location = New-Object System.Drawing.Point(20, 440)
 $lblSelected.Size = New-Object System.Drawing.Size(500, 30)
 $form.Controls.Add($lblSelected)
 
-$txtLayoutId = New-Object System.Windows.Forms.TextBox
-$txtLayoutId.Location = New-Object System.Drawing.Point(20, 480)
-$txtLayoutId.Size = New-Object System.Drawing.Size(300, 30)
-$form.Controls.Add($txtLayoutId)
+
 
 $txtNumPrint = New-Object System.Windows.Forms.TextBox
 $txtNumPrint.Location = New-Object System.Drawing.Point(340, 480)
@@ -162,15 +159,31 @@ $btnPrintNow.Location = New-Object System.Drawing.Point(430, 480)
 $btnPrintNow.Size = New-Object System.Drawing.Size(120, 40)
 $form.Controls.Add($btnPrintNow)
 
+# 🔎 Thanh Search TransactionId
+$txtSearch = New-Object System.Windows.Forms.TextBox
+$txtSearch.Location = New-Object System.Drawing.Point(20, 530)
+$txtSearch.Size = New-Object System.Drawing.Size(300, 30)
+$form.Controls.Add($txtSearch)
+
+$btnSearch = New-Object System.Windows.Forms.Button
+$btnSearch.Text = "Search"
+$btnSearch.Location = New-Object System.Drawing.Point(340, 530)
+$btnSearch.Size = New-Object System.Drawing.Size(100, 35)
+$form.Controls.Add($btnSearch)
+
+# 📑 Combobox lọc LayoutId
+$cboLayoutFilter = New-Object System.Windows.Forms.ComboBox
+$cboLayoutFilter.Location = New-Object System.Drawing.Point(460, 530)
+$cboLayoutFilter.Size = New-Object System.Drawing.Size(200, 30)
+$cboLayoutFilter.DropDownStyle = "DropDownList"
+$form.Controls.Add($cboLayoutFilter)
+
 $btnPrintNow.Add_Click({
     if ($listView.SelectedItems.Count -eq 0) {
         [System.Windows.Forms.MessageBox]::Show("Please select a transaction!", "Missing data")
         return
     }
-    if (-not $txtLayoutId.Text) {
-        [System.Windows.Forms.MessageBox]::Show("Please enter layoutId", "Missing data")
-        return
-    }
+
     $num = 1
     if ([int]::TryParse($txtNumPrint.Text, [ref]$num) -eq $false -or $num -le 0) {
         [System.Windows.Forms.MessageBox]::Show("Invalid number of prints", "Error")
@@ -179,23 +192,41 @@ $btnPrintNow.Add_Click({
 
     $selected = $listView.SelectedItems[0]
     $transactionId = $selected.Text
-    Send-ToPrintAPI -transactionId $transactionId -layoutId $txtLayoutId.Text -numberOfImage $num
+    $layoutId = $selected.SubItems[2].Text   # <-- Lấy trực tiếp từ cột LayoutId
+    Send-ToPrintAPI -transactionId $transactionId -layoutId $layoutId -numberOfImage $num
 })
+
 
 $listView.Add_SelectedIndexChanged({
     if ($listView.SelectedItems.Count -gt 0) {
         $selected = $listView.SelectedItems[0]
         $lblSelected.Text = "Selected TransactionId: " + $selected.Text
-        $txtLayoutId.Text = $selected.SubItems[2].Text
     }
 })
 
 # Load danh sách giao dịch từ DB
 function Load-Transactions {
+    param (
+        [string]$searchText = "",
+        [string]$layoutFilter = ""
+    )
+
     $listView.Items.Clear()
-    $query = "SELECT Id, RecordAt, LayoutId FROM Transactions ORDER BY RecordAt DESC LIMIT 200"
     $cmd = $global:SQLiteConnection.CreateCommand()
+    $query = "SELECT Id, RecordAt, LayoutId FROM Transactions WHERE 1=1"
+
+    if ($searchText) {
+        $query += " AND Id LIKE @search"
+        $cmd.Parameters.Add((New-Object System.Data.SQLite.SQLiteParameter("@search", "%$searchText%"))) | Out-Null
+    }
+    if ($layoutFilter -and $layoutFilter -ne "<All>") {
+        $query += " AND LayoutId = @layout"
+        $cmd.Parameters.Add((New-Object System.Data.SQLite.SQLiteParameter("@layout", $layoutFilter))) | Out-Null
+    }
+
+    $query += " ORDER BY RecordAt DESC LIMIT 200"
     $cmd.CommandText = $query
+
     $reader = $cmd.ExecuteReader()
     while ($reader.Read()) {
         $id = $reader["Id"]
@@ -209,10 +240,35 @@ function Load-Transactions {
     $reader.Close()
 }
 
+# Load danh sách LayoutId duy nhất
+function Load-LayoutFilter {
+    $cboLayoutFilter.Items.Clear()
+    $cboLayoutFilter.Items.Add("<All>")
+    $cmd = $global:SQLiteConnection.CreateCommand()
+    $cmd.CommandText = "SELECT DISTINCT LayoutId FROM Transactions ORDER BY LayoutId"
+    $reader = $cmd.ExecuteReader()
+    while ($reader.Read()) {
+        $cboLayoutFilter.Items.Add($reader["LayoutId"])
+    }
+    $reader.Close()
+    $cboLayoutFilter.SelectedIndex = 0
+}
+
+# Event Search
+$btnSearch.Add_Click({
+    Load-Transactions -searchText $txtSearch.Text.Trim() -layoutFilter $cboLayoutFilter.SelectedItem
+})
+
+# Event Filter Layout
+$cboLayoutFilter.Add_SelectedIndexChanged({
+    Load-Transactions -searchText $txtSearch.Text.Trim() -layoutFilter $cboLayoutFilter.SelectedItem
+})
+
 # Chạy chương trình
 if (Show-LoginForm) {
     Open-SQLiteConnection
     Load-Transactions
+    Load-LayoutFilter
     $form.Topmost = $true
     [void]$form.ShowDialog()
     Close-SQLiteConnection
